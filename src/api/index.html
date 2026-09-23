@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Indian Legal Database Platform</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      /* Dark Theme (Default) */
+      --bg-primary: #0a0d14;
+      --bg-card: rgba(18, 24, 38, 0.85);
+      --bg-input: rgba(10, 13, 20, 0.8);
+      --bg-item: rgba(10, 13, 20, 0.6);
+      --header-bg: rgba(10, 13, 20, 0.9);
+      --border-color: rgba(255, 255, 255, 0.1);
+      --accent-primary: #6366f1;
+      --accent-hover: #4f46e5;
+      --accent-glow: rgba(99, 102, 241, 0.25);
+      --text-main: #f3f4f6;
+      --text-heading: #ffffff;
+      --text-title: #93c5fd;
+      --text-muted: #9ca3af;
+      --badge-bg: rgba(99, 102, 241, 0.15);
+      --pill-bg: rgba(255, 255, 255, 0.05);
+      --card-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    }
+
+    [data-theme="light"] {
+      /* Light Theme */
+      --bg-primary: #f8fafc;
+      --bg-card: #ffffff;
+      --bg-input: #f1f5f9;
+      --bg-item: #f8fafc;
+      --header-bg: rgba(255, 255, 255, 0.92);
+      --border-color: #cbd5e1;
+      --accent-primary: #4f46e5;
+      --accent-hover: #4338ca;
+      --accent-glow: rgba(79, 70, 229, 0.15);
+      --text-main: #1e293b;
+      --text-heading: #0f172a;
+      --text-title: #2563eb;
+      --text-muted: #64748b;
+      --badge-bg: rgba(79, 70, 229, 0.1);
+      --pill-bg: #e2e8f0;
+      --card-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    /* Responsive Header */
+    header {
+      background: var(--header-bg);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-color);
+      padding: 1.1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      transition: background-color 0.3s ease, border-color 0.3s ease;
+    }
+
+    .brand { display: flex; align-items: center; gap: 0.85rem; }
+    .brand-icon {
+      width: 40px; height: 40px; border-radius: 12px;
+      background: linear-gradient(135deg, #6366f1, #06b6d4);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; color: white; font-size: 1.2rem;
+      box-shadow: 0 0 15px var(--accent-glow);
+    }
+    .brand-title {
+      font-size: 1.35rem; font-weight: 700;
+      color: var(--text-heading);
+      transition: color 0.3s ease;
+    }
+
+    /* Theme Switcher Toggle */
+    .theme-toggle-btn {
+      background: var(--bg-input);
+      border: 1px solid var(--border-color);
+      color: var(--text-heading);
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.2s ease;
+    }
+    .theme-toggle-btn:hover {
+      border-color: var(--accent-primary);
+      transform: scale(1.02);
+    }
+
+    .container {
+      max-width: 1380px; margin: 0 auto; padding: 2rem; width: 100%; flex: 1;
+    }
+
+    /* Navigation Tabs */
+    .tabs {
+      display: flex; gap: 0.75rem; border-bottom: 1px solid var(--border-color);
+      margin-bottom: 2rem; overflow-x: auto; padding-bottom: 0.5rem;
+      scrollbar-width: thin;
+    }
+    .tab-btn {
+      background: transparent; border: none; color: var(--text-muted);
+      font-family: inherit; font-size: 0.95rem; font-weight: 600;
+      padding: 0.75rem 1.25rem; cursor: pointer; border-radius: 10px;
+      transition: all 0.2s ease; white-space: nowrap;
+    }
+    .tab-btn:hover { color: var(--text-heading); background: var(--pill-bg); }
+    .tab-btn.active {
+      color: white; background: var(--accent-primary);
+      box-shadow: 0 0 15px var(--accent-glow);
+    }
+
+    /* Categories Grid */
+    .categories-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.25rem; margin-bottom: 2.5rem;
+    }
+    .cat-card {
+      background: var(--bg-card); border: 1px solid var(--border-color);
+      border-radius: 14px; padding: 1.35rem; transition: all 0.25s ease;
+      cursor: pointer; position: relative; overflow: hidden;
+      box-shadow: var(--card-shadow);
+    }
+    .cat-card:hover {
+      transform: translateY(-4px); border-color: var(--accent-primary);
+      box-shadow: 0 10px 30px var(--accent-glow);
+    }
+    .cat-num {
+      font-size: 0.8rem; font-weight: 700; color: var(--accent-primary); text-transform: uppercase;
+      letter-spacing: 0.05em; margin-bottom: 0.35rem;
+    }
+    .cat-name { font-size: 1.15rem; font-weight: 700; color: var(--text-heading); margin-bottom: 0.45rem; }
+    .cat-desc { font-size: 0.88rem; color: var(--text-muted); line-height: 1.45; }
+    .cat-badge {
+      display: inline-block; margin-top: 0.9rem; background: var(--badge-bg);
+      color: var(--text-title); font-size: 0.78rem; padding: 0.25rem 0.7rem; border-radius: 6px; font-weight: 600;
+    }
+
+    /* Search Console */
+    .search-panel {
+      background: var(--bg-card); border: 1px solid var(--border-color);
+      border-radius: 16px; padding: 1.75rem; margin-bottom: 2.5rem;
+      box-shadow: var(--card-shadow);
+    }
+    .search-bar { display: flex; gap: 1rem; margin-bottom: 1rem; }
+    .search-input {
+      flex: 1; background: var(--bg-input); border: 1px solid var(--border-color);
+      border-radius: 12px; padding: 0.9rem 1.25rem; color: var(--text-heading); font-family: inherit;
+      font-size: 1rem; transition: border-color 0.2s, background-color 0.3s ease;
+    }
+    .search-input:focus { outline: none; border-color: var(--accent-primary); }
+    .search-btn {
+      background: linear-gradient(135deg, var(--accent-primary), var(--accent-hover)); color: white;
+      border: none; border-radius: 12px; padding: 0 1.75rem; font-family: inherit;
+      font-weight: 600; font-size: 1rem; cursor: pointer; transition: opacity 0.2s;
+      white-space: nowrap;
+    }
+    .search-btn:hover { opacity: 0.9; }
+
+    .filter-pills { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+    .pill {
+      background: var(--pill-bg); border: 1px solid var(--border-color);
+      color: var(--text-muted); font-size: 0.82rem; padding: 0.35rem 0.85rem;
+      border-radius: 20px; cursor: pointer; transition: all 0.2s;
+    }
+    .pill:hover, .pill.active { background: var(--accent-primary); border-color: var(--accent-primary); color: white; }
+
+    /* Results List */
+    .results-list { display: flex; flex-direction: column; gap: 1rem; }
+    .result-card {
+      background: var(--bg-card); border: 1px solid var(--border-color);
+      border-radius: 14px; padding: 1.5rem; transition: border-color 0.2s;
+      box-shadow: var(--card-shadow);
+    }
+    .result-card:hover { border-color: var(--accent-primary); }
+    .result-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem; gap: 0.5rem; }
+    .result-title { font-size: 1.1rem; font-weight: 700; color: var(--text-title); }
+    .score-badge {
+      background: rgba(16, 185, 129, 0.15); color: #10b981; font-weight: 700;
+      font-size: 0.85rem; padding: 0.25rem 0.75rem; border-radius: 20px; white-space: nowrap;
+    }
+    .result-body { font-size: 0.95rem; color: var(--text-main); line-height: 1.6; margin-bottom: 1rem; }
+    .result-meta { display: flex; gap: 0.8rem; font-size: 0.8rem; color: var(--text-muted); flex-wrap: wrap; }
+    .meta-tag { background: var(--pill-bg); padding: 0.2rem 0.6rem; border-radius: 4px; border: 1px solid var(--border-color); }
+
+    /* Content Viewers */
+    .content-box {
+      background: var(--bg-card); border: 1px solid var(--border-color);
+      border-radius: 16px; padding: 1.75rem; margin-bottom: 2rem;
+      box-shadow: var(--card-shadow);
+    }
+    .section-title { font-size: 1.3rem; font-weight: 700; margin-bottom: 1.25rem; color: var(--text-heading); }
+
+    .item-list { display: flex; flex-direction: column; gap: 1rem; }
+    .item-card {
+      background: var(--bg-item); border: 1px solid var(--border-color);
+      border-radius: 12px; padding: 1.2rem;
+    }
+    .item-head { font-weight: 700; color: var(--text-title); font-size: 1.05rem; margin-bottom: 0.5rem; }
+    .item-desc { color: var(--text-main); font-size: 0.92rem; line-height: 1.5; }
+
+    footer {
+      border-top: 1px solid var(--border-color); padding: 1.5rem 2rem;
+      text-align: center; color: var(--text-muted); font-size: 0.88rem;
+    }
+
+    /* Mobile, Tablet, and Desktop Responsive Breakpoints */
+    @media (max-width: 640px) {
+      header { padding: 0.8rem 1rem; }
+      .brand-title { font-size: 1.1rem; }
+      .brand-icon { width: 32px; height: 32px; font-size: 1rem; }
+      .theme-toggle-btn { padding: 0.4rem 0.75rem; font-size: 0.8rem; }
+      .container { padding: 1rem; }
+      .search-panel { padding: 1.1rem; }
+      .search-bar { flex-direction: column; gap: 0.75rem; }
+      .search-btn { width: 100%; padding: 0.85rem; }
+      .categories-grid { grid-template-columns: 1fr; gap: 1rem; }
+      .tabs { gap: 0.4rem; padding-bottom: 0.75rem; }
+      .tab-btn { font-size: 0.85rem; padding: 0.6rem 0.9rem; }
+      .result-card { padding: 1.1rem; }
+      .result-header { flex-direction: column; gap: 0.4rem; }
+    }
+
+    @media (min-width: 641px) and (max-width: 1024px) {
+      .container { padding: 1.5rem; }
+      .categories-grid { grid-template-columns: repeat(2, 1fr); gap: 1.1rem; }
+      .tabs { gap: 0.6rem; }
+      .tab-btn { font-size: 0.9rem; padding: 0.7rem 1.1rem; }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="brand">
+      <div class="brand-icon">L</div>
+      <div class="brand-title">Indian Legal Database Platform</div>
+    </div>
+    <button class="theme-toggle-btn" id="theme-btn" onclick="toggleTheme()">
+      <span id="theme-icon">🌙</span> <span id="theme-text">Dark Mode</span>
+    </button>
+  </header>
+
+  <div class="container">
+    <!-- Navigation Tabs -->
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('categories')">13 Core Categories</button>
+      <button class="tab-btn" onclick="switchTab('search')">Hybrid Retrieval Engine</button>
+      <button class="tab-btn" onclick="switchTab('doctrines')">Doctrines & Principles</button>
+      <button class="tab-btn" onclick="switchTab('definitions')">Statutory Definitions</button>
+      <button class="tab-btn" onclick="switchTab('templates')">Forms & Templates</button>
+      <button class="tab-btn" onclick="switchTab('graph')">Citation & Knowledge Graph</button>
+    </div>
+
+    <!-- TAB 1: 13 CATEGORIES -->
+    <div id="tab-categories">
+      <div class="categories-grid" id="cat-grid">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+
+    <!-- TAB 2: HYBRID SEARCH -->
+    <div id="tab-search" style="display: none;">
+      <div class="search-panel">
+        <div class="search-bar">
+          <input type="text" id="query-input" class="search-input" placeholder="Enter legal query (e.g. Article 21 Personal Liberty, Section 73 Contract Damages, Natural Justice, Bail Guidelines)..." onkeypress="if(event.key==='Enter') executeSearch()">
+          <button class="search-btn" onclick="executeSearch()">Search Knowledge Base</button>
+        </div>
+        <div class="filter-pills" id="filter-pills">
+          <span class="pill active" onclick="setFilter(null, this)">All Documents</span>
+          <span class="pill" onclick="setFilter('constitution', this)">Constitution</span>
+          <span class="pill" onclick="setFilter('act', this)">Current Acts</span>
+          <span class="pill" onclick="setFilter('legacy_statute', this)">Legacy Statutes</span>
+          <span class="pill" onclick="setFilter('judgment', this)">Judgments</span>
+          <span class="pill" onclick="setFilter('doctrine', this)">Doctrines</span>
+          <span class="pill" onclick="setFilter('definition', this)">Definitions</span>
+          <span class="pill" onclick="setFilter('template', this)">Templates & Forms</span>
+        </div>
+      </div>
+
+      <div class="results-list" id="results-container">
+        <div style="text-align: center; color: var(--text-muted); padding: 3rem;">Enter a query above to run multi-signal hybrid retrieval across the legal database.</div>
+      </div>
+    </div>
+
+    <!-- TAB 3: DOCTRINES & PRINCIPLES -->
+    <div id="tab-doctrines" class="content-box" style="display: none;">
+      <div class="section-title">Indian Legal Principles & Doctrines</div>
+      <div class="item-list" id="doctrines-list">Loading doctrines...</div>
+    </div>
+
+    <!-- TAB 4: STATUTORY DEFINITIONS -->
+    <div id="tab-definitions" class="content-box" style="display: none;">
+      <div class="section-title">Structured Legal Definitions Compendium</div>
+      <div class="item-list" id="definitions-list">Loading definitions...</div>
+    </div>
+
+    <!-- TAB 5: TEMPLATES & FORMS -->
+    <div id="tab-templates" class="content-box" style="display: none;">
+      <div class="section-title">Essential Court Forms & Legal Document Templates</div>
+      <div class="item-list" id="templates-list">Loading templates...</div>
+    </div>
+
+    <!-- TAB 6: GRAPH -->
+    <div id="tab-graph" class="content-box" style="display: none;">
+      <div class="section-title">Citation & Cross-Reference Relational Matrix</div>
+      <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Cross-reference mappings connecting Acts, Sections, Judgments, Doctrines, and Definitions.</p>
+      <div id="graph-list" class="item-list">Loading relational graph...</div>
+    </div>
+  </div>
+
+  <footer>
+    Indian Legal Database Platform
+  </footer>
+
+  <script>
+    let activeFilter = null;
+
+    const CATEGORIES = [
+      { id: 1, name: "Constitution of India", doc_type: "constitution", desc: "Complete text, Preamble, Schedules, Amendments (42nd, 44th, 86th, 103rd), Fundamental Rights (Arts 12-35), DPSP (Arts 36-51), Fundamental Duties." },
+      { id: 2, name: "Major Current Statutes / Acts", doc_type: "act", desc: "BNS 2023, BNSS 2023, BSA 2023, Indian Contract Act 1872, Companies Act 2013, DPDP Act 2023, IT Act 2000, Consumer Protection Act 2019, Arbitration Act 1996, CPC 1908." },
+      { id: 3, name: "Important Legacy Statutes", doc_type: "legacy_statute", desc: "Indian Penal Code 1860, CrPC 1973, Indian Evidence Act 1872 for interpreting historical precedents and judgments." },
+      { id: 4, name: "Important Rules & Regulations", doc_type: "regulation", desc: "IT Intermediary Rules 2021, Companies Admin Rules 2014, Consumer Protection E-Commerce Rules 2020." },
+      { id: 5, name: "Supreme Court Judgments", doc_type: "judgment", desc: "Landmark Constitutional, criminal, contract, property, consumer, and tech precedents (Kesavananda Bharati, Puttaswamy, Maneka Gandhi)." },
+      { id: 6, name: "Selected High Court Judgments", doc_type: "judgment", desc: "Curated High Court decisions from Delhi HC, Bombay HC, Madras HC, Karnataka HC." },
+      { id: 7, name: "Legal Definitions", doc_type: "definition", desc: "Structured statutory definitions ('Personal Data', 'Financial Debt', 'Consumer', 'Public Servant', 'Consideration', 'Mens Rea') linked to source provisions." },
+      { id: 8, name: "Legal Principles / Doctrines", doc_type: "doctrine", desc: "Natural Justice, Res Judicata, Basic Structure Doctrine, Doctrine of Proportionality, Promissory Estoppel, Stare Decisis." },
+      { id: 9, name: "Legal Procedures", doc_type: "procedure", desc: "Procedural workflows for Civil Litigation, Criminal Trial, Bail Applications (Sec 437/439 & Sec 480 BNSS), Writ Petitions, Appeals." },
+      { id: 10, name: "Important Legal Forms", doc_type: "form", desc: "Templates for Bail Applications, Writ Petitions, Affidavits, Appeal Memos, Legal Notices, Consumer Complaints." },
+      { id: 11, name: "Basic Legal Document Templates", doc_type: "template", desc: "Standard templates for Non-Disclosure Agreement (NDA), Legal Notice, Residential Lease, Employment Contract, Power of Attorney (POA)." },
+      { id: 12, name: "Government Notifications / Directions", doc_type: "notification", desc: "Gazette Notifications, CERT-In Cyber Security Directions 2022, RBI Master Directions, SEBI Circulars." },
+      { id: 13, name: "Citation & Cross-Reference Data", doc_type: "citation_crossref", desc: "Core relational graph connecting Act -> Section -> Judgment -> Doctrine -> Definition." }
+    ];
+
+    /* Theme Switcher Logic */
+    function initTheme() {
+      const savedTheme = localStorage.getItem('theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+      updateThemeUI(savedTheme);
+    }
+
+    function toggleTheme() {
+      const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', newTheme);
+      localStorage.setItem('theme', newTheme);
+      updateThemeUI(newTheme);
+    }
+
+    function updateThemeUI(theme) {
+      const icon = document.getElementById('theme-icon');
+      const text = document.getElementById('theme-text');
+      if (theme === 'dark') {
+        icon.textContent = '🌙';
+        text.textContent = 'Dark Mode';
+      } else {
+        icon.textContent = '☀️';
+        text.textContent = 'Light Mode';
+      }
+    }
+
+    function init() {
+      initTheme();
+      renderCategories();
+      loadDoctrines();
+      loadDefinitions();
+      loadTemplates();
+      loadGraph();
+    }
+
+    function renderCategories() {
+      const grid = document.getElementById("cat-grid");
+      grid.innerHTML = CATEGORIES.map(c => `
+        <div class="cat-card" onclick="searchCategory('${c.doc_type}', '${c.name}')">
+          <div class="cat-num">Category ${c.id}</div>
+          <div class="cat-name">${c.name}</div>
+          <div class="cat-desc">${c.desc}</div>
+          <span class="cat-badge">Explore Category →</span>
+        </div>
+      `).join("");
+    }
+
+    function switchTab(tabId) {
+      document.querySelectorAll(".tab-btn").forEach(btn => btn.classList.remove("active"));
+      event.target.classList.add("active");
+
+      document.getElementById("tab-categories").style.display = tabId === 'categories' ? 'block' : 'none';
+      document.getElementById("tab-search").style.display = tabId === 'search' ? 'block' : 'none';
+      document.getElementById("tab-doctrines").style.display = tabId === 'doctrines' ? 'block' : 'none';
+      document.getElementById("tab-definitions").style.display = tabId === 'definitions' ? 'block' : 'none';
+      document.getElementById("tab-templates").style.display = tabId === 'templates' ? 'block' : 'none';
+      document.getElementById("tab-graph").style.display = tabId === 'graph' ? 'block' : 'none';
+    }
+
+    function searchCategory(docType, name) {
+      document.querySelectorAll(".tab-btn")[1].click();
+      document.getElementById("query-input").value = name;
+      activeFilter = docType;
+      executeSearch();
+    }
+
+    function setFilter(type, el) {
+      activeFilter = type;
+      document.querySelectorAll(".pill").forEach(p => p.classList.remove("active"));
+      el.classList.add("active");
+      executeSearch();
+    }
+
+    async function executeSearch() {
+      const query = document.getElementById("query-input").value.trim() || "Legal";
+      const container = document.getElementById("results-container");
+      container.innerHTML = `<div style="text-align:center; padding:2rem; color:var(--text-muted);">Searching legal database...</div>`;
+
+      try {
+        const res = await fetch("/api/search", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ query: query, limit: 10, doc_type: activeFilter })
+        });
+        const data = await res.json();
+        
+        if (!data.results || data.results.length === 0) {
+          container.innerHTML = `<div style="text-align:center; padding:2rem; color:var(--text-muted);">No documents found matching the query.</div>`;
+          return;
+        }
+
+        container.innerHTML = data.results.map(r => `
+          <div class="result-card">
+            <div class="result-header">
+              <div class="result-title">${r.hierarchical_level.toUpperCase()} | ${r.section_type || 'General'}</div>
+              <span class="score-badge">Match Score: ${(r.final_score * 100).toFixed(1)}%</span>
+            </div>
+            <div class="result-body">${r.content}</div>
+            <div class="result-meta">
+              <span class="meta-tag">Semantic: ${(r.semantic_similarity * 100).toFixed(0)}%</span>
+              <span class="meta-tag">Keyword: ${(r.keyword_relevance * 100).toFixed(0)}%</span>
+              <span class="meta-tag">Authority: ${(r.authority_score * 100).toFixed(0)}%</span>
+              <span class="meta-tag">Recency: ${(r.recency_score * 100).toFixed(0)}%</span>
+            </div>
+          </div>
+        `).join("");
+      } catch (err) {
+        container.innerHTML = `<div style="color:#ef4444; padding:1rem;">Search failed: ${err.message}</div>`;
+      }
+    }
+
+    async function loadDoctrines() {
+      try {
+        const res = await fetch("/api/v1/phase1/doctrines");
+        const data = await res.json();
+        const list = document.getElementById("doctrines-list");
+        if (data.length === 0) { list.innerHTML = "No doctrines loaded yet."; return; }
+        list.innerHTML = data.map(d => `
+          <div class="item-card">
+            <div class="item-head">Legal Principle / Doctrine</div>
+            <div class="item-desc">${d.content}</div>
+          </div>
+        `).join("");
+      } catch (err) {}
+    }
+
+    async function loadDefinitions() {
+      try {
+        const res = await fetch("/api/v1/phase1/definitions");
+        const data = await res.json();
+        const list = document.getElementById("definitions-list");
+        if (data.length === 0) { list.innerHTML = "No statutory definitions loaded yet."; return; }
+        list.innerHTML = data.map(d => `
+          <div class="item-card">
+            <div class="item-head">Statutory Definition</div>
+            <div class="item-desc">${d.content}</div>
+          </div>
+        `).join("");
+      } catch (err) {}
+    }
+
+    async function loadTemplates() {
+      try {
+        const res = await fetch("/api/v1/phase1/templates");
+        const data = await res.json();
+        const list = document.getElementById("templates-list");
+        if (data.length === 0) { list.innerHTML = "No templates loaded yet."; return; }
+        list.innerHTML = data.map(t => `
+          <div class="item-card">
+            <div class="item-head">${t.title}</div>
+            <div class="item-desc">Category: ${t.category.toUpperCase()} | Source: ${t.source}</div>
+          </div>
+        `).join("");
+      } catch (err) {}
+    }
+
+    async function loadGraph() {
+      try {
+        const res = await fetch("/api/graph");
+        const data = await res.json();
+        const list = document.getElementById("graph-list");
+        if (!data.edges || data.edges.length === 0) { list.innerHTML = "No citation relationships extracted yet."; return; }
+        list.innerHTML = data.edges.map(e => `
+          <div class="item-card" style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="font-weight:600; color:var(--text-title);">Entity Node #${e.from.substring(0,8)}</div>
+            <span style="background:var(--badge-bg); color:var(--text-title); padding:0.2rem 0.6rem; border-radius:6px; font-weight:700; font-size:0.85rem;">${e.relation.toUpperCase()}</span>
+            <div style="font-weight:600; color:#10b981;">Entity Node #${e.to.substring(0,8)}</div>
+          </div>
+        `).join("");
+      } catch (err) {}
+    }
+
+    window.onload = init;
+  </script>
+</body>
+
+</html>
