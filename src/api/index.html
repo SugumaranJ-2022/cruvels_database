@@ -274,6 +274,7 @@
       <button class="tab-btn" onclick="switchTab('definitions')">Statutory Definitions</button>
       <button class="tab-btn" onclick="switchTab('templates')">Forms & Templates</button>
       <button class="tab-btn" onclick="switchTab('graph')">Citation & Knowledge Graph</button>
+      <button class="tab-btn" onclick="switchTab('schema')">📊 Database Explorer & Schema</button>
     </div>
 
     <!-- TAB 1: 13 CATEGORIES -->
@@ -330,6 +331,38 @@
       <div class="section-title">Citation & Cross-Reference Relational Matrix</div>
       <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Cross-reference mappings connecting Acts, Sections, Judgments, Doctrines, and Definitions.</p>
       <div id="graph-list" class="item-list">Loading relational graph...</div>
+    </div>
+
+    <!-- TAB 7: DATABASE EXPLORER & SCHEMA PREVIEW -->
+    <div id="tab-schema" class="content-box" style="display: none;">
+      <div class="section-title">SQL Database Structure & Live Records Preview</div>
+      <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Inspect the complete SQL relational database schema, tables, column definitions, and live records (legal_db.sqlite / PostgreSQL).</p>
+      
+      <div class="categories-grid" id="db-stats-cards" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 1.5rem;">
+        <!-- DB Summary Stats dynamically inserted -->
+      </div>
+
+      <div class="section-title" style="font-size: 1.1rem; margin-bottom: 0.75rem;">Select SQL Table to Preview:</div>
+      <div class="filter-pills" id="db-table-pills" style="margin-bottom: 1.5rem;">
+        <span class="pill active" onclick="selectDbTable('documents', this)">documents (46)</span>
+        <span class="pill" onclick="selectDbTable('knowledge_chunks', this)">knowledge_chunks (171)</span>
+        <span class="pill" onclick="selectDbTable('entities', this)">entities (64)</span>
+        <span class="pill" onclick="selectDbTable('relationships', this)">relationships (27)</span>
+        <span class="pill" onclick="selectDbTable('document_entities', this)">document_entities (120)</span>
+        <span class="pill" onclick="selectDbTable('canonical_entities', this)">canonical_entities (0)</span>
+        <span class="pill" onclick="selectDbTable('low_confidence_queue', this)">low_confidence_queue (0)</span>
+      </div>
+
+      <div id="db-schema-detail" style="background: var(--bg-item); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.25rem; margin-bottom: 1.5rem;">
+        <!-- Table Column definitions rendered dynamically -->
+      </div>
+
+      <div class="section-title" style="font-size: 1.1rem; margin-bottom: 0.75rem;">Live SQL Records Data Preview:</div>
+      <div style="overflow-x: auto; background: var(--bg-item); border: 1px solid var(--border-color); border-radius: 12px; padding: 1rem;">
+        <table id="db-data-table" style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.88rem;">
+          <!-- Live table data rendered dynamically -->
+        </table>
+      </div>
     </div>
   </div>
 
@@ -404,6 +437,9 @@
       `).join("");
     }
 
+    let dbSchemaData = null;
+    let selectedTable = "documents";
+
     function switchTab(tabId) {
       document.querySelectorAll(".tab-btn").forEach(btn => btn.classList.remove("active"));
       event.target.classList.add("active");
@@ -414,7 +450,105 @@
       document.getElementById("tab-definitions").style.display = tabId === 'definitions' ? 'block' : 'none';
       document.getElementById("tab-templates").style.display = tabId === 'templates' ? 'block' : 'none';
       document.getElementById("tab-graph").style.display = tabId === 'graph' ? 'block' : 'none';
+      document.getElementById("tab-schema").style.display = tabId === 'schema' ? 'block' : 'none';
+
+      if (tabId === 'schema' && !dbSchemaData) {
+        loadDbSchema();
+      }
     }
+
+    async function loadDbSchema() {
+      try {
+        const res = await fetch("/api/db/structure");
+        const data = await res.json();
+        dbSchemaData = data.tables;
+
+        // Render Summary Stats Cards
+        const statsCards = document.getElementById("db-stats-cards");
+        statsCards.innerHTML = dbSchemaData.map(t => `
+          <div class="cat-card" style="padding: 1rem;">
+            <div class="cat-num">SQL TABLE</div>
+            <div class="cat-name" style="font-size: 1.05rem;">${t.name}</div>
+            <div style="font-size: 1.5rem; font-weight: 700; color: var(--accent-primary);">${t.count} records</div>
+          </div>
+        `).join("");
+
+        renderTableSchema(selectedTable);
+        loadTableData(selectedTable);
+      } catch (err) {
+        console.error("Failed to load DB schema:", err);
+      }
+    }
+
+    function selectDbTable(tableName, el) {
+      selectedTable = tableName;
+      document.querySelectorAll("#db-table-pills .pill").forEach(p => p.classList.remove("active"));
+      el.classList.add("active");
+      renderTableSchema(tableName);
+      loadTableData(tableName);
+    }
+
+    function renderTableSchema(tableName) {
+      if (!dbSchemaData) return;
+      const tInfo = dbSchemaData.find(t => t.name === tableName);
+      const detailDiv = document.getElementById("db-schema-detail");
+      if (!tInfo) { detailDiv.innerHTML = "Table details not found."; return; }
+
+      detailDiv.innerHTML = `
+        <div style="font-weight: 700; color: var(--text-title); font-size: 1.1rem; margin-bottom: 0.4rem;">Table: ${tInfo.name} (${tInfo.count} rows)</div>
+        <div style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">${tInfo.description}</div>
+        <div style="font-weight: 600; font-size: 0.85rem; color: var(--text-heading); margin-bottom: 0.5rem;">Column Schema Definitions:</div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.5rem;">
+          ${tInfo.columns.map(c => `
+            <div style="background: var(--bg-card); padding: 0.5rem 0.75rem; border-radius: 6px; border: 1px solid var(--border-color); font-size: 0.82rem;">
+              <span style="font-weight: 700; color: var(--accent-primary);">${c.name}</span> 
+              <span style="color: var(--text-muted);">(${c.type})</span>
+              ${c.pk ? '<span style="background: rgba(239, 68, 68, 0.2); color: #f87171; font-size: 0.7rem; padding: 0.1rem 0.3rem; border-radius: 3px; font-weight: 700; margin-left: 0.3rem;">PK</span>' : ''}
+            </div>
+          `).join("")}
+        </div>
+      `;
+    }
+
+    async function loadTableData(tableName) {
+      const tableElem = document.getElementById("db-data-table");
+      tableElem.innerHTML = `<tr><td style="padding: 1rem; text-align: center; color: var(--text-muted);">Loading SQL records...</td></tr>`;
+
+      try {
+        const res = await fetch(`/api/db/table/${tableName}?limit=50`);
+        const rows = await res.json();
+
+        if (rows.length === 0) {
+          tableElem.innerHTML = `<tr><td style="padding: 1rem; text-align: center; color: var(--text-muted);">No records currently stored in table '${tableName}'.</td></tr>`;
+          return;
+        }
+
+        const headers = Object.keys(rows[0]);
+        let headerHtml = `<tr style="border-bottom: 2px solid var(--border-color); background: var(--bg-card);">`;
+        headers.forEach(h => {
+          headerHtml += `<th style="padding: 0.75rem; color: var(--text-title); text-transform: uppercase; font-size: 0.75rem; font-weight: 700;">${h}</th>`;
+        });
+        headerHtml += `</tr>`;
+
+        let bodyHtml = "";
+        rows.forEach((row, idx) => {
+          const bg = idx % 2 === 0 ? "transparent" : "rgba(255,255,255,0.02)";
+          bodyHtml += `<tr style="border-bottom: 1px solid var(--border-color); background: ${bg};">`;
+          headers.forEach(h => {
+            const val = row[h];
+            bodyHtml += `<td style="padding: 0.65rem 0.75rem; color: var(--text-main); max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${val !== null && val !== undefined ? val : '-'}</td>`;
+          });
+          bodyHtml += `</tr>`;
+        });
+
+        tableElem.innerHTML = headerHtml + bodyHtml;
+      } catch (err) {
+        tableElem.innerHTML = `<tr><td style="padding: 1rem; color: #ef4444;">Failed to load records: ${err.message}</td></tr>`;
+      }
+    }
+
+    window.onload = init;
+
 
     function searchCategory(docType, name) {
       document.querySelectorAll(".tab-btn")[1].click();
